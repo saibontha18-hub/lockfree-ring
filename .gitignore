@@ -1,0 +1,5 @@
+# local build outputs
+bench_ring
+test_ring
+*.o
+*.a
