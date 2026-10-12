@@ -96,6 +96,27 @@ static void test_nontrivial_type()
     CHECK(r.empty());
 }
 
+/* Rvalue push moves instead of copying — temporaries and move-only
+ * payloads work, and a failed push doesn't steal the caller's object. */
+static void test_push_rvalue()
+{
+    SpscRing<std::string, 8> r;
+    std::string v;
+    std::string s = "moved";
+    CHECK(r.push(std::move(s)));
+    CHECK(r.pop(v) && v == "moved");
+    CHECK(r.push(std::string("temp"))); /* pure temporary binds to && */
+    CHECK(r.pop(v) && v == "temp");
+    CHECK(r.empty());
+
+    /* Full ring refuses the rvalue too, without moving from it. */
+    SpscRing<int, 2> tiny; /* holds 1 */
+    CHECK(tiny.push(1));
+    int x = 42;
+    CHECK(!tiny.push(std::move(x)));
+    CHECK(x == 42);
+}
+
 /* The mutex ring honors the same contract, single-threaded. */
 static void test_mutex_parity()
 {
@@ -193,6 +214,7 @@ int main()
     test_wrap_around();
     test_size();
     test_nontrivial_type();
+    test_push_rvalue();
     test_mutex_parity();
     test_threaded_spsc();
     test_threaded_contention();
