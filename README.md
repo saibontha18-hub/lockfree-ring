@@ -63,12 +63,13 @@ No dependencies beyond a C++11 compiler.
 
 | ring      | ping-pong (ns/item) | pipeline (ns/item) |
 |-----------|--------------------:|-------------------:|
-| SpscRing  |                 4.7 |               43.1 |
-| MutexRing |                94.9 |              641.4 |
+| SpscRing  |                 4.8 |               26.1 |
+| MutexRing |                88.6 |              645.6 |
 
-The uncontended case is ~20x — that's the price of taking a mutex even
+The uncontended case is ~18x — that's the price of taking a mutex even
 when nobody's fighting over it. Under real two-thread contention it's
-still ~15x. Your numbers will differ; `make bench` takes a few seconds.
+~25x on this run. Your numbers will differ (shared machines are noisy);
+`make bench` takes a few seconds.
 
 ## A note on the ordering
 
