@@ -22,6 +22,7 @@
 
 #include <atomic>
 #include <cstddef>
+#include <utility>
 
 template <typename T, size_t Capacity>
 class SpscRing {
@@ -56,6 +57,23 @@ public:
 
         /* Release: the item write must be visible before the head update
          * is, otherwise the consumer could pop a half-written item. */
+        head_.store(next, std::memory_order_release);
+        return true;
+    }
+
+    /* Rvalue overload: moves instead of copying, so temporaries and
+     * move-only payloads work. The full-check stays first — a failed
+     * push must not steal the caller's object. */
+    bool push(T &&item)
+    {
+        const size_t head = head_.load(std::memory_order_relaxed);
+        const size_t next = (head + 1) & mask();
+
+        if (next == tail_.load(std::memory_order_acquire))
+            return false;
+
+        buf_[head] = std::move(item);
+
         head_.store(next, std::memory_order_release);
         return true;
     }
